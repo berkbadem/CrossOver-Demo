@@ -1,0 +1,175 @@
+<?php
+
+/*
+ * This file is part of the Crossover Demo package.
+ *
+ * (c) Berk BADEM <berkbadem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+/**
+ * Functional test for the controllers defined inside RegistrationController.
+ *
+ * Execute the application tests using this command (requires PHPUnit ^5.7.21 to be installed):
+ *
+ *     $ cd crossover.dev/
+ *     $ php phpunit.phar -c app/ -v
+ */
+class RegistrationControllerTest extends WebTestCase
+{
+
+    /**
+     * Username constant for registration
+     */
+    const REGISTER_LOGIN = 'registerUserTest';
+
+    /**
+     * E-Mail constant for registration
+     */
+    const REGISTER_EMAIL = 'registerUserEmail@testCenter.dev';
+
+    /**
+     * Wrong E-Mail constant for registration
+     */
+    const REGISTER_EMAIl_WRONG = 'registerUserEmailWrong.dev';
+
+    /**
+     * Password constant for registration
+     */
+    const REGISTER_PASS = 'randomUserPassword';
+
+    /**
+     * Wrong Password constant for registration
+     */
+    const REGISTER_PASS_WRONG = 'randomUserPasswordNotSame';
+
+    /**
+     * @var Client
+     *
+     * Client for testing units
+     *
+     */
+    private $client;
+
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    private $em;
+
+    /**
+     * Setup function for unit tests, it creates unit test client and database manager
+     */
+    protected function setUp()
+    {
+        $this->client = static::createClient();
+        self::bootKernel();
+        $this->em = static::$kernel->getContainer()
+            ->get('doctrine')
+            ->getManager();
+    }
+
+    /**
+     * Test for register page. Tests page is reachable, tests inputs are present, tests registration with invalid parameters, tests registration with valid parameters
+     */
+    public function testRegister()
+    {
+        $crawler = $this->client->request('GET', '/register');
+
+        $this->assertTrue($this->client->getResponse()->isSuccessful());
+        $this->assertEquals(1, $crawler->filter('input[name="register[username]"]')->count());
+        $this->assertEquals(1, $crawler->filter('input[name="register[email]"]')->count());
+        $this->assertEquals(1, $crawler->filter('button[type="submit"]')->count());
+        $this->assertEquals(1, $crawler->filter('button[type="reset"]')->count());
+
+        $user = $this->em->getRepository("AppBundle:User")->findOneBy(['username' => static::REGISTER_LOGIN]);
+
+        if ($user) {
+            $this->em->remove($user);
+            $this->em->flush();
+        }
+
+        $crawler = $this->client->request('GET', '/register');
+
+        $this->assertTrue($this->client->getResponse()->isSuccessful());
+
+        $form = $crawler->selectButton('Reset')->form();
+        $form['register[username]'] = static::REGISTER_LOGIN;
+        $form['register[email]'] = static::REGISTER_EMAIl_WRONG;
+
+
+        $this->client->submit($form);
+
+        $this->assertContains('This value is not a valid email address.', $this->client->getResponse()->getContent());
+
+        $form['register[email]'] = static::REGISTER_EMAIL;
+        $this->client->submit($form);
+
+
+        $this->assertTrue($this->client->getResponse()->isRedirect());
+    }
+
+    /**
+     * Test for validation page. Tests is page is valid. Tests with wrong get parameters, tests with blank parameters, tests with correct parameters
+     */
+    public function testValidation()
+    {
+
+        $this->client->request('GET', '/validate/WrongValidationCode');
+
+        $this->assertTrue($this->client->getResponse()->isRedirect());
+
+        $this->client->request('GET', '/validate/0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f');
+
+        $this->assertTrue($this->client->getResponse()->isRedirect());
+
+        $user = $this->em->getRepository("AppBundle:User")->findOneBy(['username' => static::REGISTER_LOGIN]);
+
+        if (!$user) {
+            $this->markTestIncomplete("TestUser not found in database");
+        }
+
+        if ($user->getValidationKey() == "") {
+            $this->markTestIncomplete("TestUsers validation key not found in database");
+        }
+
+        $crawler = $this->client->request('GET', '/validate/'.$user->getValidationKey());
+
+        $this->assertTrue($this->client->getResponse()->isSuccessful());
+
+        $this->assertEquals(1, $crawler->filter('input[name="validation[plainPassword][first]"]')->count());
+        $this->assertEquals(1, $crawler->filter('input[name="validation[plainPassword][second]"]')->count());
+
+        $form = $crawler->selectButton('Reset')->form();
+        $form['validation[plainPassword][first]'] = static::REGISTER_PASS;
+        $form['validation[plainPassword][second]'] = static::REGISTER_PASS_WRONG;
+
+        $this->client->submit($form);
+        $this->assertContains('This value is not valid.', $this->client->getResponse()->getContent());
+
+        $form['validation[plainPassword][second]'] = static::REGISTER_PASS;
+        $this->client->submit($form);
+
+        $this->assertTrue($this->client->getResponse()->isRedirect());
+
+        $this->em->remove($user);
+        $this->em->flush();
+    }
+
+    /**
+     * Closes doctrine connections and unit test client
+     */
+    protected function tearDown()
+    {
+        $this->em->close();
+        $this->em = null;
+        $this->client = null;
+    }
+
+}

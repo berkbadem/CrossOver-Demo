@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>{% block title %}Newsstand PDF Output{% endblock %}</title>
+    {% block stylesheets %}{% endblock %}
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}"/>
+
+    <script src="{{ asset('js/jquery.min.js') }}"></script>
+    <script src="{{ asset('js/popper.min.js') }}"></script>
+    <script src="{{ asset('js/bootstrap.min.js') }}"></script>
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
+    <link rel="alternate" type="application/rss+xml" title="NewsStand RSS Feed" href="{{ path('news_rss') }}" />
+
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-12 mt-3">
+            <div class="row justify-content-md-center">
+                <div class="col-12 ">
+                    <div class="card">
+                        <div class="card-header">
+                            <small>Publisher : {{ article.user.username }} | Date : {{ article.created|date("d.m.Y") }}</small>
+                        </div>
+                        {% set imagepath = image_root ~ article.image %}
+                        <img class="card-img-top" src="{{ web_image(imagepath).resize(600,400) }}">
+                        <div class="card-block">
+                            <h4 class="card-title mt-3 text-center">{{ article.title }}</h4>
+                            <div class="card-text">
+                                {{ article.text }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,60 @@
+<?php
+
+/*
+ * This file is part of the Crossover Demo package.
+ *
+ * (c) Berk BADEM <berkbadem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace AppBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
+/**
+ * Controller used to manage login and logout for user in the public and restricted part of the site.
+ *
+ * @author Berk BADEM <berkbadem@gmail.com>
+ */
+class SecurityController extends Controller
+{
+    /**
+     * Login route function, it handeled by symfony authentication system
+     *
+     * @return mixed
+     *
+     * @Route("/login", name="login")
+     */
+    public function loginAction()
+    {
+        if ($this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+            return $this->redirect($this->generateUrl('news_list'));
+        }
+
+        $authenticationUtils = $this->get('security.authentication_utils');
+
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+
+        return $this->render('security/login.html.twig', array(
+            'last_username' => $lastUsername,
+            'error'         => $error,
+        ));
+    }
+
+    /**
+     * Logout route function, it handeled by symfony authentication system
+     *
+     * @return mixed
+     *
+     * @Route("/logout", name="logout")
+     */
+    public function logoutAction() {
+        if (!$this->get('security.authorization_checker')->isGranted('IS_AUTHENTICATED_FULLY')) {
+            return $this->redirect($this->generateUrl('homepage'));
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row justify-content-md-center">
+        <div class="col-12 col-sm-12 col-md-8 col-lg-6">
+            {{ form_start(form) }}
+            <div class="row">
+                <div class="col-12 p-4 text-center font-weight-bold">
+                    Registration Form ( Step 2 )
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="register_username">Password</label>
+                {{ form_widget(form.plainPassword.first, { 'attr': {'class':'form-control'}} ) }}
+                <small id="register_username_error"
+                       class="form-text text-danger">{{ form_errors(form.plainPassword.first) }}</small>
+            </div>
+            <div class="form-group">
+                <label for="register_email">Password (repeat)</label>
+                {{ form_widget(form.plainPassword.second, { 'attr': {'class':'form-control'}} ) }}
+                <small id="register_email_error"
+                       class="form-text text-danger">{{ form_errors(form.plainPassword.second) }}</small>
+            </div>
+            <button class="btn btn-primary">Save</button>
+            <button type="reset" class="btn btn-danger">Reset</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,131 @@
+<?php
+
+/*
+ * This file is part of the Crossover Demo package.
+ *
+ * (c) Berk BADEM <berkbadem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\BrowserKit\Cookie;
+
+/**
+ * Functional test for the controllers defined inside SecurityController.
+ *
+ * Execute the application tests using this command (requires PHPUnit ^5.7.21 to be installed):
+ *
+ *     $ cd crossover.dev/
+ *     $ php phpunit.phar -c app/ -v
+ */
+class SecurityControllerTest extends WebTestCase
+{
+    /**
+     * Username constant for login tests
+     */
+    const LOGIN_VALID = 'wartoghex';
+
+    /**
+     * Valid password constant for login tests
+     */
+    const PASS_VALID = '123321';
+
+    /**
+     * Invalid password constant for login tests
+     */
+    const PASS_NOTVALID = 'notValid';
+
+    /**
+     * @var Client
+     *
+     * Client for testing units
+     *
+     */
+    private $client;
+
+    /**
+     * @var \Doctrine\ORM\EntityManager
+     */
+    private $em;
+
+    /**
+     * Setup function for unit tests, it creates unit test client and database manager
+     */
+    protected function setUp()
+    {
+        $this->client = static::createClient();
+        self::bootKernel();
+        $this->em = static::$kernel->getContainer()
+            ->get('doctrine')
+            ->getManager();
+    }
+
+    /**
+     * Test for login page. Tests page is reachable, tests is fields present, tests is user found, tests for wrong password, tests for valid password
+     */
+    public function testLogin()
+    {
+
+        $crawler = $this->client->request('GET', '/login');
+        $this->assertTrue($this->client->getResponse()->isSuccessful(), "Login page loaded correctly");
+
+        $this->assertEquals(1, $crawler->filter('input[name="_username"]')->count(), "Username input not found");
+        $this->assertEquals(1, $crawler->filter('input[name="_password"]')->count(), "Password input not found");
+        $this->assertEquals(1, $crawler->filter('button[type="submit"]')->count(), "Submit button not found");
+        $this->assertEquals(1, $crawler->filter('button[type="reset"]')->count(), "Reset button not found");
+
+        $user = $this->em->getRepository("AppBundle:User")->findOneBy(
+            ['username' => static::LOGIN_VALID]
+        );
+
+        if (!$user) {
+            $this->markTestIncomplete("Valid user not found in database");
+        }
+
+
+        $form = $crawler->selectButton('Reset')->form();
+
+        $form['_username'] = static::LOGIN_VALID;
+        $form['_password'] = static::PASS_NOTVALID;
+
+        $this->client->submit($form);
+
+        $this->assertRegExp('/\/login$/', $this->client->getResponse()->headers->get('location'), "Login redirect failed");
+
+        $form['_password'] = static::PASS_VALID;
+        $this->client->submit($form);
+
+        $this->assertRegExp('/\//', $this->client->getResponse()->headers->get('location'), "Homepage redirect failed");
+
+        $this->client->followRedirect();
+
+        $this->assertContains('Welcome ' . static::LOGIN_VALID, $this->client->getResponse()->getContent(), "Home page load failed");
+    }
+
+    /**
+     * Test for logout page. Tests page is reachable
+     */
+    public function testLogout()
+    {
+        $this->client->request('GET', '/logout');
+        $this->assertRegExp('/\//', $this->client->getResponse()->headers->get('location'), "Logout redirect failed");
+
+    }
+
+    /**
+     * Closes doctrine connections and unit test client
+     */
+    protected function tearDown()
+    {
+        $this->em->close();
+        $this->em = null;
+        $this->client = null;
+    }
+
+}

@@ -1,0 +1,19 @@
+# This file is auto-generated during the composer install
+parameters:
+    database_host: 127.0.0.1
+    database_port: 3306
+    database_name: databaseName
+    database_user: databaseUser
+    database_password: 'databasePassword'
+    mailer_transport: mail
+    mailer_host: 127.0.0.1
+    mailer_user: null
+    mailer_password: null
+    secret: 128eeabbbf8920cd0929623c6ff3c99a2b8cfe2c
+    phpmailer_host: smtp.gmail.com;
+    phpmailer_port: 587
+    phpmailer_username: smtpuser@gmail.com
+    phpmailer_password: smptpassword
+    phpmailer_smtpsecure: tls
+    images_dir: '%kernel.root_dir%/../web/uploads'
+    images_absolute_url: /uploads/

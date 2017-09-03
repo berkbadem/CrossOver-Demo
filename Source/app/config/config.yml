@@ -1,0 +1,77 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: security.yml }
+    - { resource: services.yml }
+
+parameters:
+    locale: en
+
+framework:
+    secret: '%secret%'
+    router:
+        resource: '%kernel.root_dir%/config/routing.yml'
+        strict_requirements: ~
+    form: ~
+    csrf_protection: ~
+    validation: { enable_annotations: true }
+    templating:
+        engines: ['twig']
+    default_locale: '%locale%'
+    trusted_hosts: ~
+    trusted_proxies: ~
+    session:
+        handler_id: ~
+    fragments: ~
+    http_method_override: true
+    profiler:
+        enabled: true
+        collect: false
+twig:
+    debug: '%kernel.debug%'
+    strict_variables: '%kernel.debug%'
+    globals:
+      image_root: '%images_absolute_url%'
+doctrine:
+    dbal:
+        driver: pdo_mysql
+        host: '%database_host%'
+        port: '%database_port%'
+        dbname: '%database_name%'
+        user: '%database_user%'
+        password: '%database_password%'
+        charset: UTF8
+
+    orm:
+        auto_generate_proxy_classes: '%kernel.debug%'
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
+
+swiftmailer:
+    transport: '%mailer_transport%'
+    host: '%mailer_host%'
+    username: '%mailer_user%'
+    password: '%mailer_password%'
+    spool: { type: memory }
+
+gregwar_image:
+  throw_exception: true
+  cache_dir:  /cache
+
+eko_feed:
+    feeds:
+        news:
+            title:       'Highlighted Articles'
+            description: 'Highlighted articles for crossover demo'
+            link:        'http://crossover.dev'
+            encoding:    'utf-8'
+            author:      'Berk BADEM'
+knp_snappy:
+    temporary_folder: '%kernel.root_dir%/cache/snappy'
+    pdf:
+        enabled:    true
+        binary:     '%kernel.root_dir%/../vendor/h4cc/wkhtmltopdf-amd64/bin/wkhtmltopdf-amd64'
+        options:    []
+    image:
+        enabled:    false
+        binary:
+        options:    []

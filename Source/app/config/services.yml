@@ -1,0 +1,4 @@
+services:
+  app.mailer:
+    class: AppBundle\Service\Mailer
+    arguments: ['%phpmailer_host%', '%phpmailer_port%','%phpmailer_username%','%phpmailer_password%','%phpmailer_smtpsecure%']

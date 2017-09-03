@@ -1,0 +1,32 @@
+security:
+    encoders:
+        AppBundle\Entity\User:
+            algorithm: bcrypt
+            cost:      15
+    providers:
+        user_provider:
+          entity:
+            class: AppBundle\Entity\User
+            property: username
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            anonymous: ~
+            form_login:
+                login_path: login
+                check_path: login
+                username_parameter: _username
+                password_parameter: _password
+                csrf_token_generator: security.csrf.token_manager
+            logout:
+                path:   logout
+            provider:  user_provider
+
+    access_control:
+        - { path: ^/login, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/register, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/news/list, roles: ROLE_USER }
+        - { path: ^/news/new, roles: ROLE_USER }
+        - { path: ^/news/delete, roles: ROLE_USER }

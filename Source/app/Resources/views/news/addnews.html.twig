@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <div class="row justify-content-md-center">
+        <div class="col-12 col-sm-12 col-md-8 col-lg-6">
+            {{ form_start(form) }}
+            <div class="row">
+                <div class="col-12 p-4 text-center font-weight-bold">
+                    Insert News
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="register_username">News Title</label>
+                {{ form_widget(form.title, { 'attr': {'class':'form-control'}} ) }}
+                <small id="register_username_error" class="form-text text-danger">{{ form_errors(form.title) }}</small>
+            </div>
+            <div class="form-group">
+                <label for="register_email">News Image</label>
+                {{ form_widget(form.image, { 'attr': {'class':'form-control'}} ) }}
+                <small id="register_email_error" class="form-text text-danger">{{ form_errors(form.image) }}</small>
+            </div>
+            <div class="form-group">
+                <label for="register_email">News Text</label>
+                {{ form_widget(form.text, { 'attr': {'class':'form-control'}} ) }}
+                <small id="register_email_error" class="form-text text-danger">{{ form_errors(form.text) }}</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="reset" class="btn btn-danger">Reset</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+
+{% endblock %}

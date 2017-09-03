@@ -1,0 +1,42 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="{{ path('homepage') }}">Newsstand</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ path('homepage') }}">Highlights</a>
+            </li>
+            {% if app.user %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('news_list') }}">List My Articles</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ path('news_new') }}">Add New Article</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        {% if app.user %}
+            <span class="navbar-text">
+                Welcome {{ app.user.username }}
+             </span>
+                <button class="btn btn-sm btn-outline-dark m-2 mb-2"
+                        onclick="window.location.replace('{{ path('logout') }}')">
+                    Logout
+                </button>
+        {% else %}
+            <button class="btn btn-sm btn-outline-success my-2 mr-sm-1"
+                    onclick="window.location.replace('{{ path('login') }}')">
+                Login
+            </button>
+            <button class="btn btn-sm btn-outline-dark my-2 mr-sm-1"
+                    onclick="window.location.replace('{{ path('user_registration') }}')" type="button">Register
+            </button>
+        {% endif %}
+
+        </div>
+</nav>

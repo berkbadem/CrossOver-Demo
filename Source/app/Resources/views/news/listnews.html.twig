@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-12 text-center mt-4">
+            <h4>{{ header }}</h4>
+        </div>
+        {% if news|length > 0 %}
+            {% for new in news %}
+                <div class="col-sm-6 col-md-4 col-lg-3 mt-4 align-self-stretch">
+                    <div class="card">
+                        {% set imagepath = image_root ~ new.image %}
+                        <a href="{{ path('news_show', {'id' :  new.id}) }}">
+                            <img class="card-img-top" src="{{ web_image(imagepath).resize(250,150) }}">
+                        </a>
+                        <div class="card-block">
+                            <h4 class="card-title mt-3 text-center">{{ new.title }}</h4>
+                            <div class="meta">
+                                User : {{ new.user.username }}
+                            </div>
+                            <div class="card-text">
+                                {{ new.text|length > 80 ? new.text|slice(0, 80) ~ '...' : new.text }}
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <small>{{ new.created|date("d.m.Y") }}</small>
+                            <a href="{{ path('news_show', {'id' :  new.id}) }}" class="readMoreButton">
+                                <button class="btn btn-secondary float-right btn-sm"
+                                        style="cursor: pointer; cursor: hand;">
+                                    read more
+                                </button>
+                            </a>
+                            {% if header == "My Articles" %}
+                                {% if app.user %}
+                                    {% if app.user == new.user %}
+                                        <a href="{{ path('news_delete', {'id' :  new.id}) }}" class="deleteButton">
+                                            <button class="btn btn-danger float-right btn-sm mr-1"
+                                                    style="cursor: pointer; cursor: hand;">
+                                                delete
+                                            </button>
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center mt-4">
+                - No article found -
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

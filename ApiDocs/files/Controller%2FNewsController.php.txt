@@ -1,0 +1,314 @@
+<?php
+
+/*
+ * This file is part of the Crossover Demo package.
+ *
+ * (c) Berk BADEM <berkbadem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace AppBundle\Controller;
+
+use AppBundle\Entity\News;
+use AppBundle\Form\NewsType;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Gregwar\Image\Image;
+use Eko\FeedBundle\Field\Item\MediaItemField;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+
+/**
+ * Controller used to manage news contents in the public and restricted part of the site.
+ *
+ * @author Berk BADEM <berkbadem@gmail.com>
+ */
+class NewsController extends Controller
+{
+    /**
+      Homepage route function, it finds latest 10 news and displays at news/listnews.html.twig
+
+      @return Response
+
+      @Route("/", name="homepage")
+     */
+    public function indexAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $news = $em->getRepository('AppBundle:News')->findBy(
+            [],
+            [
+                'created' => 'DESC',
+            ],
+            10
+        );
+
+        return $this->render(
+            'news/listnews.html.twig',
+            array(
+                'news' => $news,
+                'header' => "Highlights",
+            )
+        );
+    }
+
+    /**
+     * New article route function, it creates new article form news/addnews.html.twig then saves it when user submit
+     *
+     * @param Request $request
+     * @return Response
+     *
+     * @Route("/news/new", name="news_new")
+     */
+    public function newAction(Request $request)
+    {
+        $news = new News();
+        $news->setUser($this->get('security.token_storage')->getToken()->getUser());
+        $form = $this->createForm(NewsType::class, $news);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $file = $news->getImage();
+
+            $fileName = md5(uniqid()).'.'.$file->guessExtension();
+
+            $file->move(
+                $this->getParameter('images_dir'),
+                $fileName
+            );
+
+            $news->setImage($fileName);
+
+            $em = $this->getDoctrine()->getManager();
+            $em->persist($news);
+            $em->flush();
+
+            return $this->render(
+                "registration/success.html.twig",
+                array(
+                    "header" => "Save Complete",
+                    "content" => "Your news has been added.",
+                )
+            );
+        }
+
+        return $this->render(
+            'news/addnews.html.twig',
+            array(
+                'form' => $form->createView(),
+            )
+        );
+    }
+
+    /**
+     * Article list route function, it finds articles created by registered user and displays at news/listnews.html.twig
+     *
+     * @param Request $request
+     * @return Response
+     *
+     * @Route("/news/list", name="news_list")
+     */
+    public function listAction(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $news = $em->getRepository('AppBundle:News')->findBy(
+            [
+                'user' => $this->get('security.token_storage')->getToken()->getUser(),
+            ],
+            [
+                'created' => 'DESC',
+            ]
+        );
+
+        return $this->render(
+            'news/listnews.html.twig',
+            array(
+                'news' => $news,
+                'header' => "My Articles",
+            )
+        );
+    }
+
+    /**
+     * Article show route function, it finds given article by id and displays at news/shownews.html.twig
+     *
+     * @param News $article
+     * @return mixed
+     *
+     * @Route("/news/show/{id}/", name="news_show")
+     */
+    public function showAction(News $article = null)
+    {
+        if ($article) {
+            return $this->render(
+                'news/shownews.html.twig',
+                array(
+                    'article' => $article,
+                )
+            );
+        } else {
+            return $this->redirectToRoute("news_error_nonews");
+        }
+    }
+
+    /**
+     * Article delete route function, it finds given article by id and deletes it if found
+     *
+     * @param News $news
+     * @return RedirectResponse
+     *
+     * @Route("/news/delete/{id}/", name="news_delete")
+     */
+    public function deleteAction(News $news = null)
+    {
+        if ($news) {
+            if ($this->getUser() == $news->getUser()) {
+                unlink(
+                    $this->get('kernel')->getRootDir().'/../web'.$this->getParameter(
+                        'images_absolute_url'
+                    ).$news->getImage()
+                );
+
+                $em = $this->getDoctrine()->getManager();
+                $em->remove($news);
+                $em->flush();
+
+                return $this->redirectToRoute("news_list");
+            } else {
+                return $this->redirectToRoute("news_error_notvalid");
+            }
+        } else {
+            return $this->redirectToRoute("news_error_nonews");
+        }
+    }
+
+    /**
+     * Article no news error route function, it gives error and displays it on errors/error.html.twig for news id mismatch when url visited
+     *
+     * @return Response
+     *
+     * @Route("/error/nonews", name="news_error_nonews")
+     */
+    public function noNewsErrorAction()
+    {
+        return $this->render(
+            "errors/error.html.twig",
+            array(
+                "error_header" => "News ID Wrong",
+                "error_content" => "There is a problem at news id, action failed.",
+            )
+        );
+
+    }
+
+    /**
+     * Article not valid news error route function, it gives error and displays it on errors/error.html.twig for news id not valid when url visited
+     *
+     * @return Response
+     *
+     * @Route("/error/notvalid", name="news_error_notvalid")
+     */
+    public function newsNotValidErrorAction()
+    {
+        return $this->render(
+            "errors/error.html.twig",
+            array(
+                "error_header" => "News ID is not valid",
+                "error_content" => "There is a problem in news id, delete failed.",
+            )
+        );
+
+    }
+
+    /**
+     * Article generate rss feed route function, it generates rss feed for latest 10 articles
+     *
+     * @return Response XML Feed
+     *
+     * @Route("/news/rss", name="news_rss")
+     */
+    public function feedAction()
+    {
+        $news = $this->getDoctrine()->getRepository('AppBundle:News')->findBy(
+            [],
+            [
+                'created' => 'DESC',
+            ],
+            10
+        );
+
+
+        foreach ($news as $article) {
+            $imageFile = $this->get("request_stack")->getCurrentRequest()->getScheme() . "://" . $this->get("request_stack")->getCurrentRequest()->getHost() .
+                "/".$image = Image::open(
+                    $this->get('kernel')->getRootDir().'/../web'.$this->getParameter(
+                        'images_absolute_url'
+                    ).$article->getImage()
+                )->resize(700, 400)->jpeg()
+            ;
+            $article->setRssLink($this->generateUrl('news_show', array('id' => $article->getID()), UrlGenerator::ABSOLUTE_URL));
+            $article->setRssImage($imageFile);
+            $article->setRssImageLength(filesize($image));
+            $article->setRssImageType(getimagesize($image)['mime']);
+        }
+        $feed = $this->get('eko_feed.feed.manager')->get('news');
+        $feed->addItemField(new MediaItemField('getFeedMediaItem'));
+        $feed->addFromArray($news);
+
+        return new Response($feed->render('rss'));
+    }
+
+    /**
+     * Article download route function, it displays clean version of article at news/downloadnews.html.twig
+     *
+     * @param News $article
+     * @return mixed
+     *
+     * @Route("/news/download/{id}/", name="news_download")
+     */
+    public function downloadViewAction(News $article = null)
+    {
+        if ($article) {
+            return $this->render(
+                'news/downloadnews.html.twig',
+                array(
+                    'article' => $article,
+                )
+            );
+        } else {
+            return $this->redirectToRoute("news_error_nonews");
+        }
+    }
+
+
+    /**
+     * Article generate pdf route function, it generates pdf and outputs as pdf file
+     *
+     * @param News $news
+     * @return mixed
+     *
+     * @Route("/news/generate/{id}/", name="news_generate_pdf")
+     */
+    public function generatePDFAction(News $news = null)
+    {
+        if ($news) {
+            $articleURL = $this->generateUrl('news_download', array('id' => $news->getId()), UrlGenerator::ABSOLUTE_URL);
+
+            return new Response(
+                $this->get('knp_snappy.pdf')->getOutput($articleURL),
+                200,
+                array(
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="file.pdf"',
+                )
+            );
+        } else {
+            return $this->redirectToRoute("news_error_nonews");
+        }
+    }
+}

@@ -1,0 +1,430 @@
+<?php
+
+/**
+ * This file is part of the Crossover Demo package.
+ *
+ * (c) Berk BADEM <berkbadem@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Eko\FeedBundle\Item\Writer\ItemInterface;
+
+/**
+ * Defines the properties of the News entity to represent the article structure.
+ *
+ * @ORM\Entity
+ * @ORM\Table(name="news")
+ *
+ * @author Berk BADEM <berkbadem@gmail.com>
+ */
+class News implements ItemInterface
+{
+    /**
+     * Article id for news
+     *
+     * @var int
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * Article title for news
+     *
+     * @var string
+     *
+     * @ORM\Column(
+     *     type="string",
+     *     length=250
+     * )
+     *
+     * @Assert\Length(
+     *     min=5,
+     *     minMessage="News title needs can be minimum 5 characters.",
+     *     max=250,
+     *     maxMessage="News title needs can be maximum 250 characters."
+     *  )
+     */
+    private $title;
+
+    /**
+     * Article description for news
+     *
+     * @var string
+     *
+     * @ORM\Column(
+     *     type="text",
+     *     length=5000
+     * )
+     *
+     * @Assert\Length(
+     *     min=5,
+     *     minMessage="News text needs can be minimum 5 characters.",
+     *     max=5000,
+     *     maxMessage="News text needs can be maximum 5000 characters."
+     *  )
+     */
+    private $text;
+
+    /**
+     * Temporary variable of article rss image url for news
+     *
+     * @var string
+     */
+    private $rssLink;
+
+    /**
+     * Temporary variable of article images type for news
+     *
+     * @var string
+     */
+    private $rssImage;
+
+    /**
+     * Article rss image type for news
+     *
+     * @var string
+     */
+    private $rssImageType;
+
+
+    /**
+     * emporary variable of article rss image lenght for news
+     *
+     * @var int
+     */
+    private $rssImageLength;
+
+    /**
+     * TArticle image for news
+     *
+     * @var string
+     *
+     * @ORM\Column(type="string", length=250)
+     * @Assert\NotBlank(message="Please, upload the news image as a JPG or PNG file.")
+     * @Assert\File(mimeTypes={ "image/png", "image/jpeg", "image/pjpeg" })
+     */
+    private $image;
+
+    /**
+     * Article creating datetime for news
+     *
+     * @var \DateTime
+     *
+     * @ORM\Column(name="created", type="datetime")
+     * @Assert\DateTime
+     */
+    private $created;
+
+    /**
+     * Article user for news
+     *
+     * @var \AppBundle\Entity\User
+     *
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\User", fetch="EAGER")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
+     *
+     * @Assert\NotBlank(
+     *     message="User not provided",
+     * )
+     */
+    private $user;
+
+    // Encapsulation
+
+    /**
+     * Returns a articles id
+     *
+     * @return integer
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * Sets articles title
+     *
+     * @param string $title
+     *
+     * @return News
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles title
+     *
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * Sets articles text
+     *
+     * @param string $text
+     *
+     * @return News
+     */
+    public function setText($text)
+    {
+        $this->text = $text;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles text
+     *
+     * @return string
+     */
+    public function getText()
+    {
+        return $this->text;
+    }
+
+    /**
+     * Sets articles rss link
+     *
+     * @param string $rssLink
+     *
+     * @return News
+     */
+    public function setRssLink($rssLink)
+    {
+        $this->rssLink = $rssLink;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles rss link
+     *
+     * @return string
+     */
+    public function getRssLink()
+    {
+        return $this->rssLink;
+    }
+
+    /**
+     * Sets articles rss image
+     *
+     * @param string $rssImage
+     *
+     * @return News
+     */
+    public function setRssImage($rssImage)
+    {
+        $this->rssImage = $rssImage;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles rss image
+     *
+     * @return string
+     */
+    public function getRssImage()
+    {
+        return $this->rssImage;
+    }
+
+    /**
+     * Sets articles rss image type
+     *
+     * @param string $rssImageType
+     *
+     * @return News
+     */
+    public function setRssImageType($rssImageType)
+    {
+        $this->rssImageType = $rssImageType;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles rss image type
+     *
+     * @return string
+     */
+    public function getRssImageType()
+    {
+        return $this->rssImageType;
+    }
+
+    /**
+     * Sets articles rss image length
+     *
+     * @param string $rssImageLength
+     *
+     * @return News
+     */
+    public function setRssImageLength($rssImageLength)
+    {
+        $this->rssImageLength = $rssImageLength;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles rss image length
+     *
+     * @return integer
+     */
+    public function getRssImageLength()
+    {
+        return $this->rssImageLength;
+    }
+
+    /**
+     * Sets articles image name
+     *
+     * @param string $image
+     *
+     * @return News
+     */
+    public function setImage($image)
+    {
+        $this->image = $image;
+
+        return $this;
+    }
+
+
+    /**
+     * Returns a articles image name
+     *
+     * @return string
+     */
+    public function getImage()
+    {
+        return $this->image;
+    }
+
+    /**
+     * Sets articles created date
+     *
+     * @param string $created
+     *
+     * @return News
+     */
+    public function setCreated($created)
+    {
+        $this->created = $created;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles created date
+     *
+     * @return string
+     */
+    public function getCreated()
+    {
+        return $this->created;
+    }
+
+    /**
+     * Sets articles user
+     *
+     * @param \AppBundle\Entity\User $user
+     *
+     * @return News
+     */
+    public function setUser(\AppBundle\Entity\User $user = null)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * Returns a articles user
+     *
+     * @return \AppBundle\Entity\User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * Returns a articles title for feeds
+     *
+     * @return string
+     */
+    public function getFeedItemTitle() {
+        return $this->title;
+    }
+
+    /**
+     * Returns a articles text for feeds
+     *
+     * @return string
+     */
+    public function getFeedItemDescription() {
+        return $this->text;
+    }
+
+    /**
+     * Returns a articles date for feeds
+     *
+     * @return string
+     */
+    public function getFeedItemPubDate() {
+        return $this->created;
+    }
+
+    /**
+     * Returns a articles item link.
+     *
+     * @return string
+     */
+    public function getFeedItemLink()
+    {
+        return $this->rssLink;
+    }
+
+    /**
+     * Returns a custom media field
+     *
+     * @return array
+     */
+    public function getFeedMediaItem()
+    {
+        return array(
+            'type'   => $this->rssImageType,
+            'length' => $this->rssImageLength,
+            'value'  => $this->rssImage
+        );
+    }
+
+    /**
+     * News constructor.
+     *
+     * Sets news created date as now
+     */
+    public function __construct()
+    {
+        $this->setCreated(new \DateTime());
+    }
+}

@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-12 mt-3">
+            <div class="row justify-content-md-center">
+                <div class="col-8 ">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="row justify-content-between">
+                                <div class="col-4">
+                                    <small>Publisher : {{ article.user.username }} | Date
+                                        : {{ article.created|date("d.m.Y") }}</small>
+                                </div>
+                                <div class="col-4">
+                                    <a href="{{ path('news_generate_pdf', {'id' :  article.id}) }}">
+                                        <button class="btn btn-warning float-right btn-sm mr-1"
+                                                style="cursor: pointer; cursor: hand;">
+                                            download as pdf
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% set imagepath = image_root ~ article.image %}
+                        <img class="card-img-top" src="{{ web_image(imagepath).resize(600,400) }}">
+                        <div class="card-block">
+                            <h4 class="card-title mt-3 text-center">{{ article.title }}</h4>
+                            <div class="card-text">
+                                {{ article.text }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
